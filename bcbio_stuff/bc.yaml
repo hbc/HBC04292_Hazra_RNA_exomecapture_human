@@ -1,0 +1,19 @@
+details:
+  - analysis: RNA-seq
+    genome_build: hg38
+    algorithm:
+      aligner: star
+      expression_caller: salmon
+      quality_format: standard
+      quantify_genome_alignments: true
+      trim_reads: read_through
+      adapters: illumina
+      strandedness: auto
+resources:
+   star:
+      memory: 10G
+      cores: 5
+      options: ["--outFilterMatchNminOverLread 0.4"]
+upload:
+  dir: ../final
+
