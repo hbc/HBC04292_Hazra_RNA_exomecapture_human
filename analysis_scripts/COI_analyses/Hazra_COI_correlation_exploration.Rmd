@@ -1,0 +1,220 @@
+---
+title: "COI vs. clinical covariates"
+author: "Emma Berdan"
+date: "`r Sys.Date()`"
+output:
+   html_document:
+      code_folding: hide
+      df_print: paged
+      highlights: pygments
+      number_sections: true
+      self_contained: true
+      theme: default
+      toc: true
+      toc_float:
+         collapsed: true
+         smooth_scroll: true
+---
+
+# Overview
+
+- Principal Investigator: Aditi Hazra
+- Experiment: Breast Cancer patient samples
+
+```{r, cache = FALSE, message = FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr)
+library(DESeq2)
+library(DEGreport)
+library(ggrepel)
+library(pheatmap)
+library(RColorBrewer)
+library(biomaRt)
+library(topGO)
+library(KEGGREST)
+library(Category)
+library(ape)
+library(data.table)
+library(fgsea)
+library(clusterProfiler)
+library(sva)
+library(gprofiler2)
+library(janitor)
+library(ggvenn)
+library(ggplot2)
+ggplot2::theme_set(theme_light(base_size = 14))
+opts_chunk[["set"]](
+    cache = FALSE,
+    dev = c("png", "pdf"),
+    error = TRUE,
+    highlight = TRUE,
+    message = FALSE,
+    prompt = FALSE,
+    tidy = FALSE,
+    warning = FALSE,
+    fig.height = 4)
+
+sanitize_datatable = function(df, ...) {
+ # remove dashes which cause wrapping
+ DT::datatable(df, ..., rownames=gsub("-", "_", rownames(df)),
+                   colnames=gsub("-", "_", colnames(df)))
+}
+```
+
+# Load and pre-process data
+
+We load our data. We look at how many zeros we have per gene and see that for many genes it is very high. We set a cutoff that at most 25 samples can have zero counts.
+
+
+## Get annotations
+```{r get gene_annotations}
+ # library(biomaRt)
+#
+
+# Get gene annotations based on reference data version used for alignment/quantification from BiomaRt
+
+# Specify the Ensembl release ## dataset used by bcbio (check archives if needed)
+#
+# # List current versions of datasets
+#  ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL")
+#  datasets <- listDatasets(ensembl)
+# #
+# # # Identify the proper archive to use for corresponding Ensembl release
+#  archives <- listEnsemblArchives()
+# #
+# # # # Use ensembl GRCm39
+#   ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",
+#                     dataset = "mmusculus_gene_ensembl")
+# # #
+# # # ## Build biomaRt query
+#  filters = listFilters(ensembl)
+#  attributes = listAttributes(ensembl)
+# # #
+#   gene_annotations <- getBM(attributes=c('ensembl_gene_id', 'entrezgene_id',  'external_gene_name', 'description'),
+#         filters = 'ensembl_gene_id',
+#        values = rownames(counts),
+#         mart = ensembl)
+# #
+# # #remove duplicated ensembl ids with different entrez gene IDs.
+#  pruned_annotations = gene_annotations %>%
+#    arrange(ensembl_gene_id, ensembl_gene_id) %>%
+#    distinct(ensembl_gene_id, .keep_all = TRUE)
+# #
+#  write.csv(pruned_annotations, "/Users/emb016/Documents/HBC04572_Rosen/data/biomart.csv")
+#
+ pruned_annotations <- read.csv("/Users/emb016/Documents/HBC04676_Sicinski/annotation/biomart.csv") %>% .[,-1]
+```
+
+## Load Data
+
+```{r  show-metadata}
+se <- readRDS("/Users/emb016/Documents/HBC04292_Hazra/full_data/bcbio-se.rds")
+
+metadata <- colData(se) %>% 
+    as_tibble(rownames = NULL)
+
+metrics <- metadata(se)$metrics %>% 
+    left_join(metadata, by = c("sample" = "sample"))
+
+meta_sm <- metadata %>%
+  as.data.frame() %>%
+  column_to_rownames("sample")
+
+
+raw_counts <- assays(se)[["raw"]] 
+
+
+
+coding_genes <- read.table("/Users/emb016/Documents/HBC04292_Hazra/lnc_and_protein_hg38.txt", header=FALSE)
+
+raw_counts2 <- subset(raw_counts, rownames(raw_counts) %in% coding_genes$V2) 
+
+
+
+## Remove WU104 and WU228
+
+raw_counts3 <- raw_counts2[,-c(3 , 96)] %>% as_tibble()  %>% 
+    as.matrix()
+
+rownames(raw_counts3) <- rownames(raw_counts2)
+
+
+meta <- data.frame(metadata[-c(3 , 96),])
+met <- data.frame(metrics[-c(3 , 96),])
+
+full2 <- meta %>% left_join(met, by="sample")
+rownames(full2) <- full2$sample
+
+zipdata <- read.csv("/Users/emb016/Documents/HBC04292_Hazra/meta/zipcode_to_use.csv")
+
+full3 <- full2 %>% left_join(zipdata, by=c("cc_study_id.y" = "Study_ID"))
+
+
+```
+
+
+
+
+## Look at correlations of COI and other continuous values
+
+
+```{r, message = FALSE,warning = FALSE}
+## subset to endpoints and remove unnecessary columns
+corr_data <- full3 %>% drop_na(Age_DCIS_Dx.x, BMI.x, Dx_FUtime.x)
+
+## Correlate every covariate with the numeric endpoint (0 or 1)
+correlations <- cor(corr_data[, c("Age_DCIS_Dx.x", "BMI.x", "Dx_FUtime.x")], corr_data$z_coi_nat)
+
+print(correlations) 
+```
+
+## Plot all three
+
+```{r}
+ggplot(corr_data, aes(y=corr_data$BMI.x, x=corr_data$z_coi_nat, color=as.factor(CaseControl.x))) + geom_point() + geom_smooth(method="lm") + xlab("COI") + ylab("BMI")
+ggplot(corr_data, aes(y=corr_data$Age_DCIS_Dx.x, x=corr_data$z_coi_nat,color=as.factor(CaseControl.x))) + geom_point() + geom_smooth(method="lm") + xlab("COI") + ylab("Age_DCIS_dx")
+ggplot(corr_data, aes(y=corr_data$Dx_FUtime.x, x=corr_data$z_coi_nat,color=as.factor(CaseControl.x))) + geom_point() + geom_smooth(method="lm") + xlab("COI") + ylab("Dx_FUtime")
+
+```
+## Look at COI v. Race in cases vs. controls and race in general
+
+
+```{r}
+ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat, color=as.factor(CaseControl.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Race")
+
+ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat)) + geom_boxplot() + geom_point(alpha=0.5) + ylab("COI") + xlab("Race")
+
+```
+
+
+
+
+
+## Plot categorical variables vs. COI as boxplots
+
+only for cases
+
+```{r}
+cases <- subset(full3, full3$CaseControl.x==1)
+
+ggplot(cases, aes(x=as.factor(Endocrine_Therapy.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Endocrine Therapy")
+
+
+ggplot(cases, aes(x=as.factor(Grade.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Grade")
+
+ggplot(cases, aes(x=as.factor(Inv_Dx.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Inv.dx")
+
+ggplot(cases, aes(x=as.factor(MarginStatus.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Margin Status")
+
+
+ggplot(cases, aes(x=as.factor(BRCA1_result.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Endocrine Therapy") + ylab("COI") + xlab("BRCA1_result")
+
+
+ggplot(cases, aes(x=as.factor(Radiation_Therapy.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Radiation Therapy")
+
+
+ggplot(cases, aes(x=as.factor(Surgery_Type.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Surgery Type")
+
+
+```
+
