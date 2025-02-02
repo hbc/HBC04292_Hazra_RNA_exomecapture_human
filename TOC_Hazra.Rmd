@@ -1,0 +1,74 @@
+---
+title: "Table of Contents"
+author: "Harvard Chan Bioinformatics Core"
+date: "`r Sys.Date()`"
+output:
+   html_document:
+      code_folding: hide
+      df_print: paged
+      highlights: pygments
+      self_contained: true
+      theme: default
+      toc: true
+      toc_float:
+         collapsed: true
+         smooth_scroll: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+# Project Info
+
+-   Project: `hbc04292`
+-   PI: `Aditi Hazra`
+-   Analyst: `Emma Berdan`
+-   Experiment: `RNA seq of human breast cancer samples`
+
+
+# Overview 
+
+This is a large clinical dataset with an enriched number of samples for women of color. Both cases and controls are present. There are a total of 143 samples, after QC 141.
+
+# bcbio_stuff (Folder)
+
+These are all the files used for the initial bcbio run
+
+# bulk_rna-seq_QC_Hazra.Rmd
+
+Standard RNA QC
+
+# bulk_rna-seq_DE_Hazra.Rmd
+
+Initial deseq2 analysis looking at age, race, case vs. control, follow up time, and surgery. Surprisingly there were no DE genes for case control
+
+# bulk_rna-seq_DE_Hazra_gsea_case_control.Rmd
+
+As a follow up to the above analysis we used the full case/control results to run GSEA in an attempt to extract any biology. We found several enriched terms. 
+
+
+# ciberstort.rmd
+
+This takes the output from cibersort (CIBERSORTx_Job1_Results.csv) and looks for differences in cell type composition.
+There were not any.
+
+# bulk_rna-seq_DE_Hazra_grade.Rmd
+
+In previous DE models surgery was used instead of grade since they were highly correlated. In this we used grade instead. This is the analysis that the client moved forward with.
+
+# bulk_rna-seq_DE_Hazra_caseonly.Rmd
+
+The major goal of this analysis was to look for genes linked to the reoccurance of breast cancer.
+
+# COI analyses (folder)
+
+These analyses looked at the role of the childhood opportunity index which was extracted (not by us) from neighborhood data.
+
+# Hazra_COI_correlation_exploration.Rmd
+
+This looked at the relationship between COI and other clinical covariates. This was just an exploratory analysis with no stats.
+
+# bulk_rna-seq_DE_Hazra_grade_zip.Rmd
+
+This examined the role of COI in gene expression and the interaction between COI and case/control and COI and race.
