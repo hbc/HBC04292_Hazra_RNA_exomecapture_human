@@ -67,8 +67,12 @@ These analyses looked at the role of the childhood opportunity index which was e
 
 # Hazra_COI_correlation_exploration.Rmd
 
-This looked at the relationship between COI and other clinical covariates. This was just an exploratory analysis with no stats.
+This looked at the relationship between COI and other clinical covariates. This was an exploratory analysis and a glm. Figures are pub quality.
 
 # bulk_rna-seq_DE_Hazra_grade_zip.Rmd
 
 This examined the role of COI in gene expression and the interaction between COI and case/control and COI and race.
+
+# bulk_rna-seq_DE_Hazra_grade_zip_goodfigs.Rmd
+
+Same as the above report but with unused analyses removed and pub quality figures.
