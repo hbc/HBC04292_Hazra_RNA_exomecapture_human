@@ -162,6 +162,12 @@ full3 <- full2 %>% left_join(zipdata, by=c("cc_study_id.y" = "Study_ID"))
 ## subset to endpoints and remove unnecessary columns
 corr_data <- full3 %>% drop_na(Age_DCIS_Dx.x, BMI.x, Dx_FUtime.x)
 
+corr_data$Race.x <- factor(corr_data$Race)
+corr_data$Race.x <- gsub("1", "NHW", corr_data$Race.x)
+corr_data$Race.x <- gsub("2", "Black", corr_data$Race.x)
+corr_data$Race.x <- relevel(factor(corr_data$Race.x), ref = "NHW")
+
+
 ## Correlate every covariate with the numeric endpoint (0 or 1)
 correlations <- cor(corr_data[, c("Age_DCIS_Dx.x", "BMI.x", "Dx_FUtime.x")], corr_data$z_coi_nat)
 
@@ -180,9 +186,9 @@ ggplot(corr_data, aes(y=corr_data$Dx_FUtime.x, x=corr_data$z_coi_nat,color=as.fa
 
 
 ```{r}
-ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat, color=as.factor(CaseControl.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Race")
+ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat, color=as.factor(CaseControl.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Race") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
-ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat)) + geom_boxplot() + geom_point(alpha=0.5) + ylab("COI") + xlab("Race")
+ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5) + ylab("COI") + xlab("Race") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
 ```
 
@@ -197,24 +203,43 @@ only for cases
 ```{r}
 cases <- subset(full3, full3$CaseControl.x==1)
 
-ggplot(cases, aes(x=as.factor(Endocrine_Therapy.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Endocrine Therapy")
+ggplot(cases, aes(x=as.factor(Endocrine_Therapy.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Endocrine Therapy") + theme(legend.position = "None") + scale_color_manual(values=c("#bcbddc","#756bb1"))
 
 
-ggplot(cases, aes(x=as.factor(Grade.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Grade")
+ggplot(cases, aes(x=as.factor(Grade.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Grade") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
-ggplot(cases, aes(x=as.factor(Inv_Dx.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Inv.dx")
+ggplot(cases, aes(x=as.factor(Inv_Dx.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Inv.dx") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
-ggplot(cases, aes(x=as.factor(MarginStatus.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Margin Status")
-
-
-ggplot(cases, aes(x=as.factor(BRCA1_result.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Endocrine Therapy") + ylab("COI") + xlab("BRCA1_result")
+ggplot(cases, aes(x=as.factor(MarginStatus.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Margin Status") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
 
-ggplot(cases, aes(x=as.factor(Radiation_Therapy.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Radiation Therapy")
+ggplot(cases, aes(x=as.factor(BRCA1_result.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Endocrine Therapy") + ylab("COI") + xlab("BRCA1_result") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
 
-ggplot(cases, aes(x=as.factor(Surgery_Type.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Surgery Type")
+ggplot(cases, aes(x=as.factor(Radiation_Therapy.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Radiation Therapy") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
 
+ggplot(cases, aes(x=as.factor(Surgery_Type.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Surgery Type") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
+
+
+```
+
+## GLM
+
+```{r}
+library(vegan)
+library(MuMIn)
+library(car)
+library(lme4)
+
+full4 <- full3 %>% drop_na(z_coi_nat,Dx_FUtime.x, Grade.x, Inv_Dx.x, Race.x, CaseControl.x)
+m1 <- glm(z_coi_nat ~ Race.x*Dx_FUtime.x + Race.x*Grade.x + Race.x*Inv_Dx.x  + Race.x + Race.x*CaseControl.x, data = full4,  na.action = "na.fail")
+
+dredge(m1)
+
+
+cases <- subset(full4, full4$CaseControl.x==1)
+best <- glm(z_coi_nat ~ Inv_Dx.x + Race.x + Race.x*Inv_Dx.x , data = cases,  na.action = "na.fail")
+Anova(best)
 ```
 
