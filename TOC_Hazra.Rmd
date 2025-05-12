@@ -29,50 +29,89 @@ editor_options:
 
 # Overview 
 
-This is a large clinical dataset with an enriched number of samples for women of color. Both cases and controls are present. There are a total of 143 samples, after QC 141.
+This is a large clinical dataset with an enriched number of samples for women of color. 
+Cases refer to women with DCIS with a subsequent breast event (SBE)
+Controls refer to women with DCIS without a SBE.
+Both cases and controls are present and matched. 
+There are a total of 143 samples, after QC 141.
 
-# bcbio_stuff (Folder)
+The initial data processing from fastq to counts was done using bcbio (https://bcbio-nextgen.readthedocs.io/en/latest/)
+Afterwards all analyses were done in R. 
+
+There were five sets of analyses:
+
+- Analysis with full dataset (all 141 samples) - Reports 1,2,3,4
+
+- Analysis only with women who had an ipsilateral SBE and their matched controls (73 samples) - Report 5
+
+- Analysis only with women who had an contralateral SBE and their matched controls (59 samples) - Report 6
+
+- Analysis only with women who had a SBE (75 samples) - Report 7
+
+- Anaylsis only with women who had an ipsilateral SBE (41 samples) - Report 8
+
+
+# bcbio_run (Folder)
 
 These are all the files used for the initial bcbio run
 
-# bulk_rna-seq_QC_Hazra.Rmd
+# 1_bulk_rna-seq_QC_Hazra.Rmd
 
 Standard RNA QC
 
-# bulk_rna-seq_DE_Hazra.Rmd
+# 2_bulk_rna-seq_DE_Hazra_full.Rmd
 
-Initial deseq2 analysis looking at age, race, case vs. control, follow up time, and surgery. Surprisingly there were no DE genes for case control
-
-# bulk_rna-seq_DE_Hazra_gsea_case_control.Rmd
-
-As a follow up to the above analysis we used the full case/control results to run GSEA in an attempt to extract any biology. We found several enriched terms. 
+Initial deseq2 analysis using all 141 samples. The model was ~ Intronic Rate + Percent GC + Race  + iagnosis follow-up time  +  Age + surgery type + case/control. Surprisingly there were no DE genes for case vs. control
 
 
-# ciberstort.rmd
-
-This takes the output from cibersort (CIBERSORTx_Job1_Results.csv) and looks for differences in cell type composition.
-There were not any.
-
-# bulk_rna-seq_DE_Hazra_grade.Rmd
+# 3_bulk_rna-seq_DE_Hazra_grade_full.Rmd
 
 In previous DE models surgery was used instead of grade since they were highly correlated. In this we used grade instead. This is the analysis that the client moved forward with.
 
-# bulk_rna-seq_DE_Hazra_caseonly.Rmd
 
-The major goal of this analysis was to look for genes linked to the reoccurance of breast cancer.
+# 4_bulk_rna-seq_DE_Hazra_gsea_case_control_full.Rmd
+
+As a follow up to the above analysis we used the full case/control results from all 141 samples to run GSEA in an attempt to extract any biology. We found several enriched terms. 
+
+
+# 5_bulk_rna-seq_DE_Hazra_gsea_case_control_ipsilateral.Rmd
+
+We performed DE analysis using only ipsliateral SBEs and their matched controls (73 samples). We redid the covariate analysis to determine our model which was ~ total reads + Percent GC + Race  + Diagnosis follow-up time +  Grade + case/control. We found 3 genes that were DE between cases and matched controls at padj < 0.1
+
+
+# 6_bulk_rna-seq_DE_Hazra_gsea_case_control_contralateral.Rmd
+
+We performed DE analysis using only contralateral SBEs and their matched controls (59 samples). We redid the covariate analysis to determine our model which was ~ total reads + Percent GC + Race  + Diagnosis follow-up time +  Surgery Type + age + case/control. We found 2 genes that were DE between cases and matched controls at padj < 0.1
+
+
+# 7_bulk_rna-seq_DE_Hazra_caseonly.Rmd
+
+Differential expression among women who had a SBE (75 samples). This was mostly focused on whether or not the SBE was invasive or a DCIS recurrance. We used the model ~ Diagnosis follow-up time + Grade + Intronic rate + Percentage GC + SBE. 3 genes had differential expression between DCIS recurrence and invasive SBEs at padj < 0.1
+
+# 8_bulk_rna-seq_DE_Hazra_caseonly_ipsilateral.Rmd
+
+Differential expression among women who had a SBE (75 samples). This was mostly focused on whether or not the SBE was invasive or a DCIS recurrance. We used the model ~ Menopause + Percent GC + Age + SBE. 3 genes had differential expression between DCIS recurrence and invasive SBEs at padj < 0.1
+
+
+# 9_cibersort.rmd
+
+We ran cibersort for all 141 samples using the LM22 signature matrix.
+This script takes the output from cibersort (CIBERSORTx_Job1_Results.csv) and looks for differences in cell type composition.
+There were not any.
+
 
 # COI analyses (folder)
 
 These analyses looked at the role of the childhood opportunity index which was extracted (not by us) from neighborhood data.
 
-# Hazra_COI_correlation_exploration.Rmd
+# 10_Hazra_COI_correlation_exploration.Rmd
 
 This looked at the relationship between COI and other clinical covariates. This was an exploratory analysis and a glm. Figures are pub quality.
 
-# bulk_rna-seq_DE_Hazra_grade_zip.Rmd
+# 11_bulk_rna-seq_DE_Hazra_grade_zip.Rmd
 
 This examined the role of COI in gene expression and the interaction between COI and case/control and COI and race.
 
-# bulk_rna-seq_DE_Hazra_grade_zip_goodfigs.Rmd
+# 12_bulk_rna-seq_DE_Hazra_grade_zip_goodfigs.Rmd
 
 Same as the above report but with unused analyses removed and pub quality figures.

@@ -446,21 +446,6 @@ write.table(res_tb_grade, file="/Users/emb016/Documents/HBC04292_Hazra/full_data
 
 
 
-```{r}
-goi <- c("ERBB2","ESR1","MKI67","AURKA","CCNB1",'MYBL2',
-         'PGR','ACTB','GAPDH','RPLP0','GUSB','TFRC','MS4A1','CD3D','CD8A','CD68','PTGS2', 'FOXA1', 'CDKN2A', 'SIAH2')
-
-to_write <- subset(res_tb_casecontrol, res_tb_casecontrol$external_gene_name %in% goi)
-
-write.table(to_write, "/Users/emb016/Documents/HBC04292_Hazra/full_data/Results/Results_genesofinterest.csv", sep=",", row.names = F)
-## "BIRC5" 44 zeros 4/24 Sergey
-## 'GSTM1' has 30 zeros 8/24 Sergey
-## 'FOXP3' 25 zeros, 9/24 Sergey
-
-
-```
-
-
 
 ## Volcano plots
 
@@ -531,6 +516,8 @@ pheatmap(norm_sig,
     fontsize_row = 10, 
     height = 20)
 ```
+
+
 ## Heatmap of expression - Dx.FUtime
 
 This plot shows only differentially expressed genes (padj < 0.1) on a per-sample basis. We have scaled the data by row and used the `ward.D2` method for clustering. We hope to see our differentially expressed genes cluster by sample group with similar expression patterns across all replicates, which they sort of do!
@@ -627,40 +614,6 @@ pheatmap(norm_sig,
     height = 20)
 ```
 
-
-## Heatmap of expression - genes of interest
-
-This plot shows our genes of interest on a per-sample basis. We have scaled the data by row and used the `ward.D2` method for clustering. 
-
-```{r heatmap-de goi, fig.height=6}
-# Extract significant genes
-sig_genes_full <- subset(res_tb_casecontrol, res_tb_casecontrol$external_gene_name %in% goi)
-sigGenes <- sig_genes_full$gene
-
-### Extract normalized expression for significant genes 
-normalized_counts <- counts(dds, normalized=TRUE)
-norm_sig <- normalized_counts[sigGenes,] 
-meta1 <- data.frame(as.factor(metadata2$Surgery_Type.x),as.factor(metadata2$CaseControl.x), as.factor(metadata2$Race.x))
-colnames(meta1) <- c("Surgery_Type","Case_Control","Race")
-rownames(meta1) <- colnames(norm_sig)
-### Set a color palette
-heat_colors <- colorRampPalette(c("blue", "black", "yellow"))(100)
-anno_colors <- list(condition=c(KO="#20A387FF",control="#453788FF"))
-
-
-### Run pheatmap using the metadata data frame for the annotation (11 x 5)
-pheatmap(norm_sig, 
-    color = heat_colors, 
-    cluster_rows = T, 
-    show_rownames = F,
-    annotation = meta1, 
-    annotation_colors = anno_colors,
-    border_color = NA, 
-    fontsize = 10, 
-    scale = "row", 
-    fontsize_row = 10, 
-    height = 20)
-```
 
 
 ### Top genes with Age
@@ -772,7 +725,6 @@ out
 Here, we've plotted the abundance (DESeq2-normalized counts) of the top 20 differentially expressed genes (DEGs, ranked by adjusted p-value) in each sample. We plot Grade and case/control vs. abundance. Some of these look convincing but others do not. **Control samples (0) are in red and case samples (1) are in blue**
 
 
-
 **Note that for surgery type zero we only have 2 samples, 1 case and 1 control**.
 
 
@@ -805,6 +757,7 @@ for (i in seq(1,20)) {
 out
 
 ```
+
 
 
 ### Top genes with Case/Control
