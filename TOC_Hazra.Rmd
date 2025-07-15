@@ -110,8 +110,5 @@ This looked at the relationship between COI and other clinical covariates. This 
 
 # 11_bulk_rna-seq_DE_Hazra_grade_zip.Rmd
 
-This examined the role of COI in gene expression and the interaction between COI and case/control and COI and race.
+This examined the role of COI in gene expression and the interaction between COI and case/control and COI and race. Figures are pub quality.
 
-# 12_bulk_rna-seq_DE_Hazra_grade_zip_goodfigs.Rmd
-
-Same as the above report but with unused analyses removed and pub quality figures.
