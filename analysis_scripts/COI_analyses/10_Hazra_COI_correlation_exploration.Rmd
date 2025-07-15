@@ -38,7 +38,6 @@ library(data.table)
 library(fgsea)
 library(clusterProfiler)
 library(sva)
-library(gprofiler2)
 library(janitor)
 library(ggvenn)
 library(ggplot2)
@@ -188,7 +187,9 @@ ggplot(corr_data, aes(y=corr_data$Dx_FUtime.x, x=corr_data$z_coi_nat,color=as.fa
 ```{r}
 ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat, color=as.factor(CaseControl.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Race") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
 
-ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5) + ylab("COI") + xlab("Race") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
+ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat)) + geom_boxplot() + geom_point(alpha=0.5) +  ylab("Childhood Opportunity Index") + xlab("Race")  + theme(legend.position = "None")
+
+
 
 ```
 
@@ -220,6 +221,19 @@ ggplot(cases, aes(x=as.factor(Radiation_Therapy.x) , y=z_coi_nat, color=as.facto
 
 
 ggplot(cases, aes(x=as.factor(Surgery_Type.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("COI") + xlab("Surgery Type") + scale_color_manual(values=c("#bcbddc","#756bb1")) + theme(legend.position = "None")
+
+
+
+one <- ggplot(corr_data, aes(x=as.factor(Race.x) , y=z_coi_nat)) + geom_boxplot() + geom_point(alpha=0.5) +  ylab("Childhood Opportunity Index") + xlab("Race")  + theme(legend.position = "None")
+two <- ggplot(cases, aes(x=as.factor(Grade.x) , y=z_coi_nat, color=as.factor(Race.x))) + geom_boxplot() + geom_point(alpha=0.5, position = position_jitterdodge()) + ylab("Childhood Opportunity Index") + xlab("Grade") +  theme(legend.position = "None")
+
+
+
+pdf("/Users/emb016/Documents/HBC04292_Hazra/full_data/Neighborhood_figures_tables/Fig1_race.pdf", width = 6, height = 8)
+one/two +
+  plot_annotation(tag_levels = 'a', tag_suffix=")")
+dev.off()
+
 
 
 ```
