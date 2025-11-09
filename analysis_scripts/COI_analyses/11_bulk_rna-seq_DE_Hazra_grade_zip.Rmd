@@ -146,8 +146,10 @@ full2 <- meta %>% left_join(met, by="sample")
 rownames(full2) <- full2$sample
 
 zipdata <- read.csv("/Users/emb016/Documents/HBC04292_Hazra/meta/zipcode_to_use.csv")
+er_meta <- read.csv("/Users/emb016/Documents/HBC04292_Hazra/ER_metadata.csv")
 
-full3 <- full2 %>% left_join(zipdata, by=c("cc_study_id.y" = "Study_ID"))
+full3 <- full2 %>% left_join(zipdata, by=c("cc_study_id.y" = "Study_ID")) 
+full3 <- full3 %>% left_join(er_meta, by=c("cc_study_id.y" = "ID_FINAL","Zipcode"="zip", "Dx_FUtime.x"="dx_futime"))
 
 ## There are many zero heavy genes take a look at the number of zeros per gene
 zero_dist <- rowSums(raw_counts3>0)
@@ -353,6 +355,56 @@ write.table(sig_genes_int2, file="/Users/emb016/Documents/HBC04292_Hazra/full_da
 ```
 
 
+## Cooks distance
+
+```{r}
+cooks_distances <- assays(dds)[["cooks"]]
+
+info <- data.frame(mcols(dds))
+# Get the design matrix from the dds object that already ran
+design_matrix <- model.matrix(design(dds), colData(dds))
+
+# Now calculate Cook's cutoff
+cooks_cutoff <- qf(0.99, ncol(dds), ncol(dds) - ncol(design_matrix))
+
+# Export to a data frame for easier manipulation
+cooks_df <- as.data.frame(cooks_distances)
+cooks_df$gene <- rownames(cooks_df)
+## KRT10
+
+
+KRT10_cooks <- cooks_distances["ENSG00000186395", ]
+KRT10_cooks[KRT10_cooks > 1.495]
+result <- (norm_c["ENSG00000186395",c("wu127","wu194","wu198","wu227","wu260","wu282")])
+
+
+## CA2
+
+CA2_cooks <- cooks_distances["ENSG00000104267", ]
+CA2_cooks[CA2_cooks > 1.495]
+result2 <- (norm_c["ENSG00000104267",c("wu148","wu270")])
+
+# RAFGAL1
+
+
+RAF_cooks <- cooks_distances["ENSG00000174373", ]
+RAF_cooks[RAF_cooks > 1.495]
+
+
+# BACH2
+
+
+BACH_cooks <- cooks_distances["ENSG00000112182", ]
+BACH_cooks[BACH_cooks > 1.495]
+
+
+
+
+```
+
+
+
+
 ### Top genes with COI
 
 Here, we've plotted the abundance (DESeq2-normalized counts) of the top 20 differentially expressed genes (DEGs, ranked by adjusted p-value) in each sample. We plot COI vs. abundance and add a trendline for the top 4 genes.  Some of these look convincing but others do not.
@@ -526,25 +578,33 @@ to_graph$coi <- metadata2$scaled_z_coi
 to_graph$casecontrol <- metadata2$CaseControl.x
 to_graph$loc <- metadata2$loc
 to_graph$endocrine <- metadata2$Endocrine_Therapy.x
+to_graph$ER <- metadata2$ER_composite
+to_graph2 <- to_graph %>% drop_na(ER)
 
 to_graph$endocrine <- gsub("0","No Endocrine Therapy", to_graph$endocrine)
 to_graph$endocrine <- gsub("1","Endocrine Therapy", to_graph$endocrine)
+to_graph2$ER <- gsub("0","ER -", to_graph2$ER)
+to_graph2$ER <- gsub("1","ER +", to_graph2$ER)
 
 
 for (i in seq(1)) {
   
   to_graph$temp=to_graph[[i]]
+    to_graph2$temp=to_graph2[[i]]
+
   
   out[[i]] <- ggplot(to_graph,aes(x=coi,y=temp, color=as.factor(casecontrol)))  + geom_point()+ ylab(paste0(names[[i]])) + geom_smooth(method = "lm", fill = "grey85") + xlab("Childhood Opportunity Index") + theme(legend.position = "none")+ scale_color_manual(values=c("#bcbddc","#756bb1"))
 
   ggsave(file = paste0("/Users/emb016/Documents/HBC04292_Hazra/full_data/coi_interaction_",names[[i]],".png"), out[[i]])  ## save plot
 
   
-    out2[[i]] <- ggplot(to_graph,aes(x=endocrine,y=temp, color=as.factor(endocrine)))  + geom_point()+ geom_boxplot()
+    out2[[i]] <- ggplot(to_graph,aes(x=endocrine,y=temp, color=as.factor(endocrine)))  + geom_point()+ geom_boxplot() + xlab("Endocrine Therapy Status") + ylab("ESR1") + theme(legend.position = "none")
     
-      
-    out3[[i]] <- ggplot(to_graph,aes(x=coi,y=temp, color=as.factor(endocrine)))  + geom_point()+ ylab(paste0(names[[i]])) + geom_smooth(method = "lm", fill = "grey85") +  xlab("Childhood Opportunity Index") + facet_wrap(~endocrine)  + theme(legend.position = "none") +  scale_color_manual(values=c("#bcbddc","#756bb1"))
-    #ggsave(file = paste0("/Users/emb016/Documents/HBC04292_Hazra/full_data/coi_interaction_",names[[i]],"_split_ipsi_contra.png"), out2[[i]])  ## save plot
+  ggsave(file = paste0("/Users/emb016/Documents/HBC04292_Hazra/full_data/Endo_therapy_",names[[i]],".png"), out2[[i]]) 
+  
+    out3[[i]] <- ggplot(to_graph2,aes(x=ER,y=temp, color=as.factor(ER)))  + geom_point()+ geom_boxplot() + xlab("Endocrine Receptor") + ylab("ESR1") + theme(legend.position = "none")
+    
+      ggsave(file = paste0("/Users/emb016/Documents/HBC04292_Hazra/full_data/ER_status_",names[[i]],".png"), out3[[i]]) 
 }
 
 out
